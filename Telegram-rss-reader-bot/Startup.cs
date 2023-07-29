@@ -22,7 +22,17 @@ public class Startup
   {
     services.AddSingleton(Configuration);
 
-    var appSettings = Configuration.GetSection("TelegramBotSettings").Get<TelegramBotSettings>();
+    var appSettings = Configuration.GetSection("TelegramBotSettings").Get<TelegramBotSettings>() ?? throw new InvalidOperationException("The 'TelegramBotSettings' configuration section is missing.");
+    ValidateSetting(appSettings.Token, "TelegramBotSettings:Token");
+    ValidateSetting(appSettings.ChatId, "TelegramBotSettings:ChatId");
     services.AddSingleton<ITelegramBotClient>(new TelegramBotClient(appSettings.Token));
+  }
+
+  public static void ValidateSetting(string value, string settingName)
+  {
+    if (string.IsNullOrEmpty(value))
+    {
+      throw new InvalidOperationException($"The '{settingName}' configuration value is missing or empty.");
+    }
   }
 }
