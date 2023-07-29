@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using HtmlAgilityPack;
@@ -17,35 +18,42 @@ var serviceProvider = services.BuildServiceProvider();
 var botActions = serviceProvider.GetRequiredService<BotActions>();
 var configuration = serviceProvider.GetRequiredService<IConfiguration>();
 
-using CancellationTokenSource cts = new();
-
 var feedUrl = configuration.GetValue<string>("TelegramBotSettings:FeedUrl");
 
-try
+using CancellationTokenSource cts = new();
+
+var timer = new Timer(async _ =>
 {
-  using var httpClient = new HttpClient();
-  using var response = await httpClient.GetAsync(feedUrl, cts.Token);
-  using var content = await response.Content.ReadAsStreamAsync();
-  var document = XDocument.Load(content);
-  var rssItems = document.Descendants("item");
-  foreach (var rssItem in rssItems)
+  try
   {
-    var item = new RssItem();
-    item.Title = $"{rssItem.Element("title")?.Value}\n\n{rssItem.Element("pubDate")?.Value}";
-    item.Link = rssItem.Element("link")?.Value;
-    await botActions.SendMessageAsync($"{item.Title}\n\n\n{item.Link}", cts.Token, disablePreview: true);
+    using var httpClient = new HttpClient();
+    using var response = await httpClient.GetAsync(feedUrl, cts.Token);
+    using var content = await response.Content.ReadAsStreamAsync();
+    var document = XDocument.Load(content);
+    var rssItems = document.Descendants("item");
+
+    Console.WriteLine($"[{DateTime.Now}] - Reading feed. {rssItems.Count()} items found.");
+    foreach (var rssItem in rssItems)
+    {
+      var item = new RssItem
+      {
+        Title = rssItem.Element("title")?.Value,
+        DateTime = DateTime.Parse(rssItem.Element("pubDate")?.Value),
+        Link = rssItem.Element("link")?.Value
+      };
+      var properties = item.GetType().GetProperties();
+      if (!properties.All(p => p.GetValue(item) == null))
+      {
+        await botActions.SendMessageAsync($"{item.Title}\n\n{item.DateTime}\n\n\n{item.Link}", cts.Token, disablePreview: true);
+      }
+    }
   }
-}
-catch (Exception ex)
-{
-  await botActions.SendMessageAsync($"Error reading RSS feed: {ex.Message}", cts.Token);
-}
+  catch (Exception ex)
+  {
+    await botActions.SendMessageAsync($"Error reading RSS feed: {ex.Message}", cts.Token);
+  }
+}, null, TimeSpan.Zero, TimeSpan.FromMinutes(5));
 
+Console.ReadLine();
 cts.Cancel();
-
-
-public class RssItem
-{
-  public string Title { get; set; }
-  public string Link { get; set; }
-}
+timer.Dispose();
