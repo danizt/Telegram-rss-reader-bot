@@ -31,9 +31,9 @@ try
   foreach (var rssItem in rssItems)
   {
     var item = new RssItem();
-    item.Title = rssItem.Element("title")?.Value + " || " + rssItem.Element("pubDate")?.Value;
+    item.Title = $"{rssItem.Element("title")?.Value}\n\n{rssItem.Element("pubDate")?.Value}";
     item.Link = rssItem.Element("link")?.Value;
-    await botActions.SendMessageAsync($"{item.Title}\n\n\n{item.Link}", cts.Token);
+    await botActions.SendMessageAsync($"{item.Title}\n\n\n{item.Link}", cts.Token, disablePreview: true);
   }
 }
 catch (Exception ex)
