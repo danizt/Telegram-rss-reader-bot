@@ -15,10 +15,11 @@ services.AddSingleton<BotActions>();
 var serviceProvider = services.BuildServiceProvider();
 
 var botActions = serviceProvider.GetRequiredService<BotActions>();
+var configuration = serviceProvider.GetRequiredService<IConfiguration>();
 
 using CancellationTokenSource cts = new();
 
-var feedUrl = "https://www.apkmirror.com/apk/instagram/threads-an-instagram-app/variant-%7B%22arches_slug%22%3A%5B%22arm64-v8a%22%5D%7D/feed/";
+var feedUrl = configuration.GetValue<string>("TelegramBotSettings:FeedUrl");
 
 try
 {

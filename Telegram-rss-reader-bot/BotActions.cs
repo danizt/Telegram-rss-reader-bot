@@ -14,7 +14,7 @@ public class BotActions
 
     public async Task SendMessageAsync(string message, CancellationToken cancellationToken)
     {
-        var chatId = _configuration.GetValue<long>("TelegramBotSettings:ChatId");
-        await _botClient.SendTextMessageAsync(chatId.ToString(), message, cancellationToken: cancellationToken);
+        var chatId = _configuration.GetValue<string>("TelegramBotSettings:ChatId");
+        await _botClient.SendTextMessageAsync(chatId, message, cancellationToken: cancellationToken);
     }
 }
