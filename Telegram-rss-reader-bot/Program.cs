@@ -14,6 +14,6 @@ var botActions = serviceProvider.GetRequiredService<BotActions>();
 
 using CancellationTokenSource cts = new();
 
-await botActions.SendMessageAsync(appsettings.ChatId.ToString(), $"Hello, World!", cts.Token);
+await botActions.SendMessageAsync($"Hello, World!", cts.Token);
 
 cts.Cancel();

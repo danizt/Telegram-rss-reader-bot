@@ -1,20 +1,20 @@
-namespace Telegram_rss_reader_bot;
-
-using System.Threading;
-using System.Threading.Tasks;
+using Microsoft.Extensions.Configuration;
 using Telegram.Bot;
 
 public class BotActions
 {
-  private readonly ITelegramBotClient _botClient;
+    private readonly ITelegramBotClient _botClient;
+    private readonly IConfiguration _configuration;
 
-  public BotActions(ITelegramBotClient botClient)
-  {
-    _botClient = botClient;
-  }
+    public BotActions(ITelegramBotClient botClient, IConfiguration configuration)
+    {
+        _botClient = botClient;
+        _configuration = configuration;
+    }
 
-  public async Task SendMessageAsync(string chatId, string message, CancellationToken cancellationToken)
-  {
-    await _botClient.SendTextMessageAsync(chatId, message, cancellationToken: cancellationToken);
-  }
+    public async Task SendMessageAsync(string message, CancellationToken cancellationToken)
+    {
+        var chatId = _configuration.GetValue<long>("TelegramBotSettings:ChatId");
+        await _botClient.SendTextMessageAsync(chatId.ToString(), message, cancellationToken: cancellationToken);
+    }
 }
