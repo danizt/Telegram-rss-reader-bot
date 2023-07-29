@@ -19,6 +19,7 @@ var botActions = serviceProvider.GetRequiredService<BotActions>();
 var configuration = serviceProvider.GetRequiredService<IConfiguration>();
 
 var feedUrl = configuration.GetValue<string>("TelegramBotSettings:FeedUrl");
+var timeSpan = configuration.GetValue<int>("TelegramBotSettings:FeedCheckMinutesInterval");
 
 using CancellationTokenSource cts = new();
 
@@ -52,7 +53,7 @@ var timer = new Timer(async _ =>
   {
     await botActions.SendMessageAsync($"Error reading RSS feed: {ex.Message}", cts.Token);
   }
-}, null, TimeSpan.Zero, TimeSpan.FromMinutes(5));
+}, null, TimeSpan.Zero, TimeSpan.FromMinutes(timeSpan));
 
 Console.ReadLine();
 cts.Cancel();
